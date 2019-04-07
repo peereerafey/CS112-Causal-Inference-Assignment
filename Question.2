@@ -1,0 +1,115 @@
+foo <- read.csv("https://course-resources.minerva.kgi.edu/uploaded_files/mke/00086677-3767/peace.csv")
+#As given in the instructions
+# extract relevant columns
+foo <- foo[, c(6:8, 11:16, 99, 50, 114, 49, 63, 136, 109, 126, 48, 160, 142, 10)]
+
+# remove 2 rows with missing data (there are better ways to handle missing data)
+foo <- foo[c(-19, -47), ]
+# Now starting the replication of the figure
+glm1 = glm(pbs2s3~ wartype+logcost+wardur+factnum+factnum2+trnsfcap+untype4+treaty+develop+exp+decade , data = foo, family = binomial)
+
+new_glm1 = glm(pbs2s3~ wartype+logcost+wardur+factnum+factnum2+trnsfcap+untype4+treaty+develop+exp+decade, I(wardur*untype4) , data = foo, family = binomial)
+
+result = function(numbers, coefficients){
+  
+  total = coefficients[1] + numbers[1]*coefficients[2] + numbers[2]*coefficients[3] + numbers[3]*coefficients[4] + numbers[4]*coefficients[5] + numbers[5]*coefficients[6] + numbers[6]*coefficients[7] + numbers[7]*coefficients[8] + numbers[8]*coefficients[9] + numbers[9]*coefficients[10] + numbers[10]*coefficients[11] + numbers[11]*coefficients[12]
+  
+  return(exp(total) / (1 + exp(total)))
+}
+
+tr_storage = c()
+cr_storage = c()
+
+wartime = c()
+
+for (duration in 1:315){
+  wartime = c(wartime, duration)
+  
+  numerics.tr = c(mean(foo$wartype), mean(foo$logcost), duration,mean(foo$factnum),mean(foo$factnum2), mean(foo$trnsfcap), 1, mean(foo$treaty), mean(foo$develop), mean(foo$exp), mean(foo$decade))
+  numerics.cr = c(mean(foo$wartype), mean(foo$logcost), duration,mean(foo$factnum),mean(foo$factnum2), mean(foo$trnsfcap), 0, mean(foo$treaty), mean(foo$develop), mean(foo$exp), mean(foo$decade))
+  
+  outcome.tr = result(numerics.tr, glm1$coefficients)
+  outcome.cr = result(numerics.cr, glm1$coefficients)
+  
+  tr_storage = c(tr_storage, outcome.tr)
+  cr_storage = c(cr_storage,outcome.cr)
+}
+
+trtmnt = tr_storage - cr_storage
+
+plot(x=wartime, y = trtmnt)
+
+lines(x = wartime, y = trtmnt)
+
+# -- Second Part -- #
+
+glm2 = glm(pbs2s3~ wartype+logcost+wardur+factnum+factnum2+trnsfcap+untype4+treaty+develop+exp+decade+ I(wardur*untype4) , data = foo, family = binomial)
+
+result2 = function(numbers, coefficients ){
+  
+  total = coefficients[1] + numbers[1]*coefficients[2] + numbers[2]*coefficients[3] + numbers[3]*coefficients[4] + numbers[4]*coefficients[5] + numbers[5]*coefficients[6] + numbers[6]*coefficients[7] + numbers[7]*coefficients[8] + numbers[8]*coefficients[9] + numbers[9]*coefficients[10] + numbers[10]*coefficients[11] + numbers[11]*coefficients[12]+ numbers[7]*numbers[3]*coefficients[13]
+  
+  return(exp(total) / (1 + exp(total)))
+}
+
+tr_storage.2 = c()
+cr_storage.2 = c()
+
+wartime = c()
+
+for (duration in 1:315){
+  wartime = c(wartime, duration)
+  
+  numerics.tr = c(mean(foo$wartype), mean(foo$logcost), duration,mean(foo$factnum),mean(foo$factnum2), mean(foo$trnsfcap), 1, mean(foo$treaty), mean(foo$develop), mean(foo$exp), mean(foo$decade))
+  numerics.cr = c(mean(foo$wartype), mean(foo$logcost), duration,mean(foo$factnum),mean(foo$factnum2), mean(foo$trnsfcap), 0, mean(foo$treaty), mean(foo$develop), mean(foo$exp), mean(foo$decade))
+  
+  outcome.tr = result2(numerics.tr, glm2$coefficients)
+  outcome.cr = result2(numerics.cr, glm2$coefficients)
+  
+  tr_storage.2 = c(tr_storage.2, outcome.tr)
+  cr_storage.2 = c(cr_storage.2,outcome.cr)
+}
+
+trtmnt2 = tr_storage.2 - cr_storage.2
+
+plot(x = wartime, y = trtmnt2)
+
+lines(x = wartime, y = trtmnt2)
+
+# -- Third Part -- #
+
+glm3 = glm(pbs2s3~ wartype+logcost+wardur+factnum+factnum2+trnsfcap+untype4+treaty+develop+exp+decade+ I(logcost*untype4) , data = foo, family = binomial)
+
+result3 = function(numbers, coefficients ){
+  
+  total = coefficients[1] + numbers[1]*coefficients[2] + numbers[2]*coefficients[3] + numbers[3]*coefficients[4] + numbers[4]*coefficients[5] + numbers[5]*coefficients[6] + numbers[6]*coefficients[7] + numbers[7]*coefficients[8] + numbers[8]*coefficients[9] + numbers[9]*coefficients[10] + numbers[10]*coefficients[11] + numbers[11]*coefficients[12]+ numbers[2]*numbers[7]*coefficients[13]
+  
+  return(exp(total) / (1 + exp(total)))
+}
+
+tr_storage.3 = c()
+cr_storage.3 = c()
+
+wartime = c()
+
+for (duration in 1:315){
+  wartime = c(wartime, duration)
+  
+  numerics.tr = c(mean(foo$wartype), mean(foo$logcost), duration,mean(foo$factnum),mean(foo$factnum2), mean(foo$trnsfcap), 1, mean(foo$treaty), mean(foo$develop), mean(foo$exp), mean(foo$decade))
+  numerics.cr = c(mean(foo$wartype), mean(foo$logcost), duration,mean(foo$factnum),mean(foo$factnum2), mean(foo$trnsfcap), 0, mean(foo$treaty), mean(foo$develop), mean(foo$exp), mean(foo$decade))
+  
+  outcome.tr = result3(numerics.tr, glm3$coefficients)
+  outcome.cr = result3(numerics.cr, glm3$coefficients)
+  
+  tr_storage.3 = c(tr_storage.3, outcome.tr)
+  cr_storage.3 = c(cr_storage.3,outcome.cr)
+}
+
+trtmnt3 = tr_storage.3 - cr_storage.3
+
+# Now labelling the graph
+plot(x = wartime, y = trtmnt3, 
+     main = "Figure-8", xlab = "War Timeline", ylab = "Marginal effect -- Treatment")
+
+
+# ---------------------------------- #
