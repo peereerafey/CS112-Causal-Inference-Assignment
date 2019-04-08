@@ -41,6 +41,11 @@ te = mean(foo_data[foo_data$Tr==1,]$l_2yrs) -
   mean(foo_data[foo_data$Tr==0,]$l_2yrs)
 t.test(l_2yrs ~ Tr, data=foo_data)
 
+# non-matched treatment effect
+te = mean(foo_data[foo_data$Tr==1,]$l_5yrs) -
+  mean(foo_data[foo_data$Tr==0,]$l_5yrs)
+t.test(l_5yrs ~ Tr, data=foo_data)
+
 #'''Above is the treatment effect'''
 
 summary(logit_2yrs)
