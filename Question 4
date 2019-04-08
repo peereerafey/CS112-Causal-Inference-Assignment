@@ -1,0 +1,95 @@
+library(Matching)
+library(rgenoud)
+foo_data <- read.csv("https://course-resources.minerva.kgi.edu/uploaded_files/mke/00086677-3767/peace.csv")
+foo_data <- foo_data[c(-19, -47,-4, -16, -84, -93, -98), ]
+which(is.na(foo$pbs5l) == TRUE)
+
+#pbs2l is for two years
+#pbs5l is for five years
+
+#putting the treatment
+foo_data$uncint
+Tr <- rep(0, length(foo_data$uncint))
+Tr[which(foo_data$uncint != 'None' & foo_data$uncint != 'Observer' )] <- 1
+
+#outcome after two years
+l_2yrs <- rep(0, length(foo_data$pbs2l))
+l_2yrs[which(foo_data$pbs2l == 'Success')] <- 1
+l_2yrs[which(foo_data$pbs2l == 'Failure')] <- 0
+l_2yrs
+
+#outcome after five years
+l_5yrs <- rep(0, length(foo_data$pbs5l))
+l_5yrs[which(foo_data$pbs5l == 'Success')] <- 1
+l_5yrs[which(foo_data$pbs5l == 'Failure')] <- 0
+l_5yrs
+
+#Logistic Model
+
+logit_2yrs = glm(l_2yrs ~ wartype + logcost + wardur + factnum + factnum2 + trnsfcap + Tr + treaty + 
+                              develop + exp + decade, data=foo_data, family="binomial")
+
+logit_5yrs = glm(l_5yrs ~ wartype + logcost + wardur + factnum + factnum2 + trnsfcap + Tr + treaty + 
+                              develop + exp + decade, data=foo_data, family="binomial")
+
+
+
+
+
+# non-matched treatment effect
+te = mean(foo_data[foo_data$Tr==1,]$l_2yrs) -
+  mean(foo_data[foo_data$Tr==0,]$l_2yrs)
+t.test(l_2yrs ~ Tr, data=foo_data)
+
+#'''Above is the treatment effect'''
+
+summary(logit_2yrs)
+
+summary(logit_5yrs)
+###
+
+#---------------Propensity matching--------------------------
+
+
+propensity = glm( Tr ~ wartype + logcost + wardur + factnum + factnum2 + trnsfcap + treaty + 
+                          develop + exp + decade, data=foo_data, family="binomial")
+
+
+X <- propensity$fitted.values
+
+matchout.prop <- Match(Y=l_2yrs, Tr = Tr, X=X,BiasAdjust=TRUE)
+
+mb.out <- MatchBalance(Tr ~ wartype + logcost + wardur + factnum + factnum2 + trnsfcap + treaty + 
+                         develop + exp + decade, data=foo_data, match.out = matchout.prop, nboots=1000)
+
+summary(Match(Y=foo_data$pbs2l,  Tr = Tr, X=X ))
+summary(matchout.prop)
+matchout.prop$est.noadj
+
+
+#----------------------
+X = cbind(foo_data$wartype , foo_data$logcost , foo_data$wardur , foo_data$factnum , foo_data$factnum2 , foo_data$trnsfcap , foo_data$treaty , 
+          foo_data$develop , foo_data$exp , foo_data$decade)
+
+
+genout <- GenMatch(X = X, Tr = Tr)
+
+summary(genout)
+#2 Year
+matchout.gen2 <- Match(Y =l_2yrs ,X = X, Tr = Tr, Weight.matrix=genout, BiasAdjust=TRUE)
+
+mb.out2 <- MatchBalance(Tr ~ wartype + logcost + wardur + factnum + factnum2 + trnsfcap + treaty + 
+                          develop + exp + decade, data=foo_data, match.out = matchout.gen2, nboots=1000)
+
+
+
+#5-Year
+matchout.gen5 <- Match(Y =l_5yrs ,X = X, Tr = Tr, Weight.matrix=genout, BiasAdjust=TRUE)
+summary(matchout.gen2)
+
+sum(l_5yrs)
+sum(l_2yrs)
+
+matchout.gen2$est.noadj
+matchout.gen5$est.noadj
+
